@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apleno Verdulería - Sugerencias</title>
+  <style>
+    :root{
+      --bg: #0d0f10;
+      --primary: #19e68c;
+      --accent: #ff3d81;
+      --yellow: #ffd166;
+      --cyan: #2ec4ff;
+      --card: #12161a;
+      --text: #eaf6ff;
+      --muted: #a9c4d6;
+      --shadow: rgba(0,0,0,.3);
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{ margin:0; padding:0; background: radial-gradient(circle at 20% 0%, #0c223f, #032f3b 40%, #003b2d 70%, #0a4a15 100%); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial; }
+
+    header{
+      position: sticky; top:0; z-index: 10;
+      backdrop-filter: blur(6px);
+      background: linear-gradient(90deg, rgba(0,0,0,.45), rgba(0,0,0,.2));
+      border-bottom: 1px solid rgba(255,255,255,.15);
+    }
+    .container{ max-width: 920px; margin: 0 auto; padding: 16px; }
+
+    .brand{ display:flex; align-items:center; gap:12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; font-size: clamp(18px, 2vw, 22px); }
+    .brand .logo{
+      width: 40px; height: 40px; border-radius: 10px; display:grid; place-items:center;
+      background: radial-gradient(circle at 30% 30%, var(--primary), var(--cyan));
+      box-shadow: 0 6px 18px var(--shadow), 0 0 18px rgba(25,230,140,.35);
+      color:#001a10; font-weight: 900;
+    }
+
+    main{ padding: 16px; }
+
+    .hero{ text-align:center; margin: 18px 0 10px; }
+    .hero h1{ margin:0; font-size: clamp(26px, 5vw, 40px); text-shadow: 0 2px 10px rgba(0,0,0,.35); }
+    .hero p{ margin: 6px auto 0; max-width: 700px; color: var(--muted); font-size: clamp(14px, 2.1vw, 18px); }
+
+    .card{
+      margin: 24px auto; padding: 18px; border-radius: 16px; background: #0f1419;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 12px 28px var(--shadow);
+    }
+
+    form{
+      display:grid; gap: 14px; margin-top: 10px;
+    }
+    label{ font-weight: 700; color: #ecfff6; }
+    input[type="text"], input[type="email"], textarea{
+      width: 100%; padding: 12px 14px; border-radius: 10px; background: #0b1116;
+      border: 1px solid rgba(255,255,255,.12); color: var(--text); outline: none;
+      box-shadow: 0 4px 14px rgba(0,0,0,.25) inset;
+    }
+    textarea{ min-height: 120px; resize: vertical; }
+
+    .row{ display:grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 680px){ .row{ grid-template-columns: 1fr; } }
+
+    .actions{ display:flex; gap: 10px; justify-content:flex-end; align-items:center; }
+    .btn{
+      appearance:none; border:none; cursor: pointer; padding: 10px 16px; border-radius: 999px;
+      font-weight: 800; color: #0b1116; box-shadow: 0 10px 22px rgba(0,0,0,.25);
+      transition: transform .1s ease, box-shadow .2s ease;
+    }
+    .btn:active{ transform: translateY(1px); box-shadow: 0 6px 14px rgba(0,0,0,.2); }
+    .btn-primary{ background: linear-gradient(135deg, var(--accent), var(--yellow)); }
+    .btn-ghost{ background: transparent; color: var(--yellow); border: 2px solid var(--yellow); }
+
+    .list{ margin-top: 24px; display:grid; gap: 12px; }
+    .comment{
+      background: #0b1116; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 12px;
+      display:flex; gap: 12px; box-shadow: 0 8px 20px var(--shadow);
+    }
+    .avatar{ width: 44px; height: 44px; border-radius: 10px; overflow:hidden; flex: 0 0 auto; }
+    .avatar img{ width:100%; height:100%; object-fit: cover; }
+    .comment-body{ display:flex; flex-direction:column; gap: 6px; }
+    .comment-body h4{ margin:0; font-size: 16px; }
+    .meta{ color: var(--muted); font-size: 12px; }
+
+    footer{ text-align:center; color: #e8fff5; opacity: .9; padding: 28px 12px 40px; }
+    a{ color: var(--cyan); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+      <div class="brand">
+        <div class="logo">A</div>
+        <span>Apleno Verdulería</span>
+      </div>
+      <nav style="display:flex; gap:12px; font-weight:700;">
+        <a href="./proyec_verdu.html">Inicio</a>
+        <a href="#form">Dejar sugerencia</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Tu opinión nos ayuda a mejorar</h1>
+      <p>Deja tus sugerencias, comentarios o ideas para seguir creciendo. ¡Gracias por ser parte de Apleno!</p>
+    </section>
+
+    <section class="card" id="form" aria-label="Formulario de sugerencias">
+      <h2 style="margin:0 0 8px;">Deja tu comentario</h2>
+      <form id="suggestForm">
+        <div class="row">
+          <div>
+            <label for="name">Nombre</label>
+            <input type="text" id="name" name="name" placeholder="Tu nombre" required />
+          </div>
+          <div>
+            <label for="email">Email (opcional)</label>
+            <input type="email" id="email" name="email" placeholder="tu@correo.com" />
+          </div>
+        </div>
+        <div>
+          <label for="message">Comentario</label>
+          <textarea id="message" name="message" placeholder="Escribe tu sugerencia" required></textarea>
+        </div>
+        <div class="actions">
+          <button type="reset" class="btn btn-ghost">Limpiar</button>
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+      </form>
+
+      <div class="list" id="commentsList" aria-live="polite" aria-relevant="additions">
+        <!-- Los comentarios enviados aparecerán aquí -->
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © <span id="year"></span> Apleno Verdulería • Gracias por tus ideas
+  </footer>
+
+  <script>
+    // Configuración de API
+    const API_BASE = 'http://localhost:3000/api';
+
+    function renderCommentItem({ name, email, message, date }){
+      const el = document.createElement('div');
+      el.className = 'comment';
+      const initials = (name || 'A').trim().slice(0,1).toUpperCase();
+      const placeholder = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(initials)}&backgroundType=gradientLinear&fontFamily=Arial&fontWeight=700&fontSize=36`;
+      el.innerHTML = `
+        <div class="avatar"><img alt="avatar" src="${placeholder}"/></div>
+        <div class="comment-body">
+          <h4>${name || 'Anónimo'}</h4>
+          <div class="meta">${new Date(date).toLocaleString()}${email ? ' • ' + email : ''}</div>
+          <div>${String(message).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </div>
+      `;
+      return el;
+    }
+
+    async function fetchComments(){
+      try{
+        const res = await fetch(`${API_BASE}/comments`);
+        const data = await res.json();
+        if(!data.ok) throw new Error('API error');
+        return data.items || [];
+      }catch(err){
+        console.error(err);
+        return [];
+      }
+    }
+
+    async function renderList(){
+      const list = document.getElementById('commentsList');
+      list.innerHTML = '';
+      const items = await fetchComments();
+      if(!items.length){
+        const empty = document.createElement('div');
+        empty.style.color = '#a9c4d6';
+        empty.textContent = 'Aún no hay comentarios. ¡Sé el primero en dejar una sugerencia!';
+        list.appendChild(empty);
+        return;
+      }
+      items.forEach(item => list.appendChild(renderCommentItem(item)));
+    }
+
+    document.getElementById('suggestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const message = form.message.value.trim();
+
+      if(message.length < 5){
+        alert('Por favor, escribe un comentario más detallado (mínimo 5 caracteres).');
+        return;
+      }
+
+      try{
+        const res = await fetch(`${API_BASE}/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, message })
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error('No se pudo guardar el comentario');
+        form.reset();
+        renderList();
+      }catch(err){
+        console.error(err);
+        alert('Error enviando el comentario. Asegúrate que la API esté ejecutándose.');
+      }
+    });
+
+    // Inicializar
+    document.getElementById('year').textContent = new Date().getFullYear();
+    renderList();
+  </script>
+</body>
+</html>
