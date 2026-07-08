@@ -1,0 +1,42 @@
+{
+  "id": "/",
+  "name": "La Balanza - Verdulería Digital",
+  "short_name": "La Balanza",
+  "description": "Balanza digital para verdulerías: calculá precio por peso y llevá el control de tus ventas del día, sin conexión a internet.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait",
+  "background_color": "#0d1310",
+  "theme_color": "#0d1310",
+  "lang": "es-AR",
+  "dir": "ltr",
+  "categories": ["business", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
