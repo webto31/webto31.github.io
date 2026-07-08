@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0e1410">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Verdulería · Balanza Digital</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🥕%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1310;
+    --bg-2:#0a0f0c;
+    --panel:#161f19;
+    --panel-2:#1d2a22;
+    --panel-border:#2a392f;
+    --lcd-bg:#07130c;
+    --lcd-bg-2:#0b1f13;
+    --lcd-glow:#7CFB63;
+    --lcd-glow-dim:#3f7d3c;
+    --accent:#ff8a3d;
+    --accent-dark:#d9691f;
+    --mint:#4fd1a5;
+    --text:#eaf2e9;
+    --text-dim:#8fa596;
+    --danger:#ff6b5d;
+    --radius:22px;
+    --radius-sm:14px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% -10%, #1c3324 0%, transparent 45%),
+      radial-gradient(circle at 100% 0%, #2a1c14 0%, transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Manrope',system-ui,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow-x:hidden;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:18px 16px 24px;
+  }
+
+  /* ---------- Header ---------- */
+  header.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-icon{
+    width:42px; height:42px; border-radius:13px;
+    background:linear-gradient(150deg, var(--accent), var(--accent-dark));
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+    box-shadow:0 4px 14px rgba(255,138,61,0.35);
+  }
+  .brand-text h1{margin:0; font-size:16px; font-weight:800; letter-spacing:.2px;}
+  .brand-text span{font-size:11px; color:var(--text-dim); font-weight:600; letter-spacing:.5px; text-transform:uppercase;}
+  .day-total-btn{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:8px 12px;
+    text-align:right;
+    cursor:pointer;
+    color:var(--text);
+    display:flex; flex-direction:column; align-items:flex-end; gap:1px;
+  }
+  .day-total-btn small{color:var(--text-dim); font-size:9.5px; font-weight:700; letter-spacing:.6px; text-transform:uppercase;}
+  .day-total-btn strong{font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--mint);}
+
+  /* ---------- LCD Panel ---------- */
+  .lcd-panel{
+    background:linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--panel-border);
+    border-radius:var(--radius);
+    padding:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+    margin-bottom:14px;
+  }
+  .lcd-row{display:flex; gap:10px; margin-bottom:10px;}
+  .lcd-field{
+    flex:1;
+    background:radial-gradient(120% 140% at 50% -20%, var(--lcd-bg-2), var(--lcd-bg));
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    border:2px solid transparent;
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+    transition:border-color .2s ease, transform .1s ease;
+  }
+  .lcd-field::after{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+  }
+  .lcd-field.active{
+    border-color:var(--lcd-glow-dim);
+    box-shadow:0 0 0 3px rgba(124,251,99,0.12), inset 0 0 18px rgba(124,251,99,0.08);
+  }
+  .lcd-field:active{transform:scale(0.98);}
+  .lcd-label{
+    display:block;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:1.2px;
+    color:var(--lcd-glow-dim);
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+  .lcd-field.active .lcd-label{color:var(--lcd-glow);}
+  .lcd-value{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:22px;
+    color:var(--lcd-glow-dim);
+    letter-spacing:.5px;
+    text-shadow:0 0 6px rgba(124,251,99,0.05);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    transition:color .15s ease, text-shadow .15s ease;
+  }
+  .lcd-field.active .lcd-value{
+    color:var(--lcd-glow);
+    text-shadow:0 0 12px rgba(124,251,99,0.55), 0 0 2px rgba(124,251,99,0.8);
+  }
+  .lcd-total{
+    background:radial-gradient(120% 160% at 50% -30%, var(--lcd-bg-2), var(--lcd-bg));
+    border-radius:var(--radius-sm);
+    padding:16px 18px;
+    position:relative;
+    overflow:hidden;
+    border:2px solid rgba(124,251,99,0.15);
+  }
+  .lcd-total::after{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+  }
+  .lcd-total .lcd-label{color:var(--lcd-glow);}
+  .lcd-total .lcd-value{
+    font-size:38px;
+    color:var(--lcd-glow);
+    text-shadow:0 0 16px rgba(124,251,99,0.6), 0 0 3px rgba(124,251,99,0.9);
+  }
+  .lcd-total .lcd-value.pulse{ animation:pulseGlow .28s ease; }
+  @keyframes pulseGlow{
+    0%{ text-shadow:0 0 26px rgba(124,251,99,0.95), 0 0 6px rgba(124,251,99,1); transform:scale(1.03);}
+    100%{ text-shadow:0 0 16px rgba(124,251,99,0.6), 0 0 3px rgba(124,251,99,0.9); transform:scale(1);}
+  }
+  .product-tag{
+    margin-top:8px;
+    font-size:12px;
+    color:var(--text-dim);
+    font-weight:600;
+    min-height:16px;
+  }
+  .product-tag b{color:var(--text);}
+
+  /* ---------- Cart panel (venta actual) ---------- */
+  .cart-panel{
+    background:linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--panel-border);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:16px;
+  }
+  .cart-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+  .cart-header h2{margin:0; font-size:14px; font-weight:800;}
+  .cart-list{max-height:220px; overflow-y:auto; margin:8px 0 10px; display:flex; flex-direction:column; gap:7px;}
+  .cart-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel-2); border:1px solid var(--panel-border);
+    border-radius:12px; padding:9px 11px;
+  }
+  .cart-row .info{display:flex; flex-direction:column;}
+  .cart-row .info b{font-size:13px;}
+  .cart-row .info span{font-size:10.5px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;}
+  .cart-row .amount{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--mint); font-size:13.5px;}
+  .cart-row .del{background:none; border:none; color:var(--danger); font-size:15px; margin-left:9px; cursor:pointer; padding:3px;}
+  .empty-hint.small{padding:16px 6px; font-size:12.5px;}
+  .cart-total-row{
+    display:flex; align-items:center; justify-content:space-between;
+    border-top:1px dashed var(--panel-border);
+    padding-top:10px; margin-bottom:12px;
+  }
+  .cart-total-row span{font-size:12.5px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px;}
+  .cart-total-row strong{font-family:'JetBrains Mono',monospace; font-size:20px; color:var(--mint);}
+  .cart-actions{display:flex; gap:10px;}
+  .cart-actions .btn-secondary{flex:0 0 auto; padding:14px 18px;}
+  .cart-actions .btn-primary{flex:1;}
+
+  /* ---------- Presets collapse toggle ---------- */
+  .presets-heading-right{display:flex; align-items:center; gap:8px;}
+  .toggle-btn{
+    background:var(--panel-2);
+    border:1px solid var(--panel-border);
+    color:var(--text-dim);
+    width:28px; height:28px;
+    border-radius:9px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .25s ease;
+  }
+  .toggle-btn.collapsed{transform:rotate(-90deg);}
+  .presets.hidden{display:none;}
+  .presets-section{margin-bottom:16px;}
+  .presets-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 2px 10px;
+  }
+  .presets-heading h2{
+    margin:0;
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .presets-heading h2 b{
+    color:var(--text);
+    font-size:14px;
+    letter-spacing:0;
+    text-transform:none;
+  }
+  .presets-heading .count{
+    background:var(--panel-2);
+    border:1px solid var(--panel-border);
+    color:var(--text-dim);
+    font-size:11px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:99px;
+  }
+  .presets{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+  }
+  .chip{
+    background:linear-gradient(160deg, var(--panel-2), var(--panel));
+    border:1.5px solid var(--panel-border);
+    color:var(--text);
+    padding:14px 8px 12px;
+    border-radius:18px;
+    font-size:13px;
+    font-weight:800;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    line-height:1.25;
+    cursor:pointer;
+    text-align:center;
+    min-height:96px;
+    transition:transform .1s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .chip .emoji{font-size:26px; line-height:1;}
+  .chip .pname{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+  .chip small{color:var(--mint); font-weight:700; font-size:12px; font-family:'JetBrains Mono',monospace;}
+  .chip:active{transform:scale(0.94);}
+  .chip.selected{
+    border-color:var(--lcd-glow-dim);
+    box-shadow:0 0 0 3px rgba(124,251,99,0.12);
+  }
+  .chip.add{
+    color:var(--accent);
+    border-color:var(--accent-dark);
+    border-style:dashed;
+    background:rgba(255,138,61,0.06);
+  }
+  .chip.add .emoji{font-size:22px;}
+
+  /* ---------- Keypad ---------- */
+  .keypad{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:9px;
+    margin-bottom:12px;
+  }
+  .key{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:16px;
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:21px;
+    font-weight:700;
+    padding:16px 0;
+    cursor:pointer;
+    user-select:none;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .key:active{transform:scale(0.94); background:var(--panel-2);}
+  .key.clear{color:var(--danger); font-family:'Manrope',sans-serif; font-size:14px; font-weight:800;}
+  .key.back{color:var(--accent); font-size:19px;}
+
+  /* ---------- Actions ---------- */
+  .actions{display:flex; gap:10px;}
+  .btn{
+    flex:1;
+    border:none;
+    border-radius:16px;
+    padding:16px 0;
+    font-size:14.5px;
+    font-weight:800;
+    letter-spacing:.2px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    transition:transform .08s ease, filter .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--mint), #2fae82);
+    color:#06231a;
+    box-shadow:0 8px 20px rgba(79,209,165,0.28);
+  }
+  .btn-secondary{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    color:var(--text-dim);
+  }
+  .btn:disabled{ opacity:.4; filter:grayscale(0.4); pointer-events:none; }
+
+  /* ---------- Drawer (history) ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(6,10,8,0.6);
+    backdrop-filter:blur(2px);
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:40;
+  }
+  .overlay.show{opacity:1; pointer-events:auto;}
+  .drawer{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    max-width:480px;
+    margin:0 auto;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-bottom:none;
+    border-radius:24px 24px 0 0;
+    padding:16px 16px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(105%);
+    transition:transform .28s cubic-bezier(.32,.72,0,1);
+    z-index:41;
+    max-height:78vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .drawer.show{transform:translateY(0);}
+  .drawer-handle{width:38px; height:4px; background:var(--panel-border); border-radius:99px; margin:0 auto 12px;}
+  .drawer-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:2px;}
+  .drawer h2{margin:0; font-size:16px; font-weight:800; white-space:nowrap;}
+  .drawer .sub{color:var(--text-dim); font-size:12px; margin-bottom:12px;}
+  .date-select{
+    background:var(--panel-2); border:1px solid var(--panel-border); color:var(--text);
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
+    border-radius:10px; padding:7px 9px; outline:none; max-width:150px;
+  }
+  .drawer-actions{display:flex; gap:8px; margin-bottom:8px;}
+  .btn.small{padding:11px 0; font-size:11.5px; flex:1;}
+  .sale-list{overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; margin-bottom:12px;}
+  .sale-item{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel-2); border:1px solid var(--panel-border);
+    border-radius:14px; padding:10px 12px;
+  }
+  .sale-item .info{display:flex; flex-direction:column;}
+  .sale-item .info b{font-size:13.5px;}
+  .sale-item .info span{font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;}
+  .sale-item .amount{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--mint); font-size:14px;}
+  .sale-item .del{
+    background:none; border:none; color:var(--danger); font-size:16px; margin-left:10px; cursor:pointer; padding:4px;
+  }
+  .empty-hint{color:var(--text-dim); font-size:13px; text-align:center; padding:30px 10px;}
+
+  /* ---------- Modal (add product) ---------- */
+  .modal{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(6,10,8,0.65); z-index:50; opacity:0; pointer-events:none; transition:opacity .2s ease;
+    padding:20px;
+  }
+  .modal.show{opacity:1; pointer-events:auto;}
+  .modal-box{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:20px;
+    padding:20px; width:100%; max-width:340px;
+  }
+  .modal-box h3{margin:0 0 14px; font-size:15px; font-weight:800;}
+  .modal-box label{font-size:11px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px;}
+  .modal-box input{
+    width:100%; background:var(--panel-2); border:1px solid var(--panel-border); color:var(--text);
+    border-radius:12px; padding:11px 12px; font-size:15px; font-family:'Manrope',sans-serif;
+    margin:6px 0 14px; outline:none;
+  }
+  .modal-box input:focus{border-color:var(--mint);}
+  .modal-actions{display:flex; gap:10px;}
+
+  ::selection{background:rgba(255,138,61,0.35);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🥕</div>
+      <div class="brand-text">
+        <h1>La Balanza</h1>
+        <span>Verdulería digital</span>
+      </div>
+    </div>
+    <div class="day-total-btn" id="openHistory">
+      <small>Total del día</small>
+      <strong id="dayTotalDisplay">$ 0,00</strong>
+    </div>
+  </header>
+
+  <main class="lcd-panel">
+    <div class="lcd-row">
+      <div class="lcd-field active" id="fieldPrice" data-field="price">
+        <span class="lcd-label">Precio / kg</span>
+        <span class="lcd-value" id="priceDisplay">$ 0,00</span>
+      </div>
+      <div class="lcd-field" id="fieldWeight" data-field="weight">
+        <span class="lcd-label">Peso (kg)</span>
+        <span class="lcd-value" id="weightDisplay">0,000</span>
+      </div>
+    </div>
+    <div class="lcd-total">
+      <span class="lcd-label">Subtotal producto</span>
+      <span class="lcd-value" id="totalDisplay">$ 0,00</span>
+      <div class="product-tag" id="productTag">Tocá un producto o ingresá el precio manualmente</div>
+    </div>
+  </main>
+
+  <div class="cart-panel">
+    <div class="cart-header">
+      <h2>🧾 Venta actual</h2>
+      <span class="count" id="cartCount">0 productos</span>
+    </div>
+    <div class="cart-list" id="cartList">
+      <div class="empty-hint small">Agregá productos con el botón de abajo para sumarlos a esta venta.</div>
+    </div>
+    <div class="cart-total-row">
+      <span>Total de la venta</span>
+      <strong id="cartTotalDisplay">$ 0,00</strong>
+    </div>
+    <div class="cart-actions">
+      <button class="btn btn-secondary small" id="clearCartBtn">Vaciar</button>
+      <button class="btn btn-primary" id="checkoutBtn" disabled>✓ Cobrar venta</button>
+    </div>
+  </div>
+
+  <div class="presets-section">
+    <div class="presets-heading">
+      <h2>🛒 <b>Productos frecuentes</b></h2>
+      <div class="presets-heading-right">
+        <span class="count" id="presetsCount">0</span>
+        <button class="toggle-btn" id="togglePresetsBtn" aria-label="Mostrar u ocultar productos frecuentes" aria-expanded="true">▾</button>
+      </div>
+    </div>
+    <div class="presets" id="presets"></div>
+  </div>
+
+  <div class="keypad" id="keypad">
+    <button class="key" data-key="1">1</button>
+    <button class="key" data-key="2">2</button>
+    <button class="key" data-key="3">3</button>
+    <button class="key" data-key="4">4</button>
+    <button class="key" data-key="5">5</button>
+    <button class="key" data-key="6">6</button>
+    <button class="key" data-key="7">7</button>
+    <button class="key" data-key="8">8</button>
+    <button class="key" data-key="9">9</button>
+    <button class="key" data-key=",">,</button>
+    <button class="key" data-key="0">0</button>
+    <button class="key back" data-key="back">⌫</button>
+    <button class="key clear" data-key="clear" style="grid-column: span 3;">BORRAR CAMPO</button>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-secondary" id="newSaleBtn">↺ Borrar item</button>
+    <button class="btn btn-primary" id="addToCartBtn" disabled>+ Agregar a la venta</button>
+  </div>
+
+
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-top">
+    <h2>Historial de ventas</h2>
+    <select class="date-select" id="dateSelect"></select>
+  </div>
+  <div class="sub" id="drawerSub">0 ventas · $ 0,00 acumulado</div>
+  <div class="sale-list" id="saleList"></div>
+  <div class="drawer-actions">
+    <button class="btn btn-secondary small" id="exportJsonBtn">⬇ Copia (.json)</button>
+    <button class="btn btn-secondary small" id="exportCsvBtn">⬇ Excel (.csv)</button>
+    <button class="btn btn-secondary small" id="importBtn">⬆ Restaurar</button>
+  </div>
+  <input type="file" id="importFile" accept=".json" style="display:none;">
+  <button class="btn btn-secondary" id="clearDayBtn">Vaciar este día</button>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3>Nuevo producto</h3>
+    <label>Nombre</label>
+    <input id="newProdName" type="text" placeholder="Ej: Acelga" maxlength="20">
+    <label>Precio por kg ($)</label>
+    <input id="newProdPrice" type="number" inputmode="decimal" placeholder="Ej: 1200">
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="cancelModal">Cancelar</button>
+      <button class="btn btn-primary" id="confirmModal">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DEFAULT_PRESETS = [
+    {name:"Tomate", price:1500},
+    {name:"Papa", price:800},
+    {name:"Cebolla", price:900},
+    {name:"Zanahoria", price:700},
+    {name:"Manzana", price:1800},
+    {name:"Banana", price:1600},
+    {name:"Naranja", price:1100},
+    {name:"Zapallo", price:650}
+  ];
+
+  var state = {
+    activeField: "price",
+    priceRaw: "",
+    weightRaw: "",
+    productName: null,
+    cart: []
+  };
+  var cartIdCounter = 0;
+
+  var els = {
+    fieldPrice: document.getElementById("fieldPrice"),
+    fieldWeight: document.getElementById("fieldWeight"),
+    priceDisplay: document.getElementById("priceDisplay"),
+    weightDisplay: document.getElementById("weightDisplay"),
+    totalDisplay: document.getElementById("totalDisplay"),
+    productTag: document.getElementById("productTag"),
+    presets: document.getElementById("presets"),
+    presetsCount: document.getElementById("presetsCount"),
+    togglePresetsBtn: document.getElementById("togglePresetsBtn"),
+    keypad: document.getElementById("keypad"),
+    addToCartBtn: document.getElementById("addToCartBtn"),
+    newSaleBtn: document.getElementById("newSaleBtn"),
+    cartList: document.getElementById("cartList"),
+    cartCount: document.getElementById("cartCount"),
+    cartTotalDisplay: document.getElementById("cartTotalDisplay"),
+    clearCartBtn: document.getElementById("clearCartBtn"),
+    checkoutBtn: document.getElementById("checkoutBtn"),
+    dayTotalDisplay: document.getElementById("dayTotalDisplay"),
+    openHistory: document.getElementById("openHistory"),
+    overlay: document.getElementById("overlay"),
+    drawer: document.getElementById("drawer"),
+    saleList: document.getElementById("saleList"),
+    drawerSub: document.getElementById("drawerSub"),
+    dateSelect: document.getElementById("dateSelect"),
+    clearDayBtn: document.getElementById("clearDayBtn"),
+    exportJsonBtn: document.getElementById("exportJsonBtn"),
+    exportCsvBtn: document.getElementById("exportCsvBtn"),
+    importBtn: document.getElementById("importBtn"),
+    importFile: document.getElementById("importFile"),
+    modal: document.getElementById("modal"),
+    newProdName: document.getElementById("newProdName"),
+    newProdPrice: document.getElementById("newProdPrice"),
+    cancelModal: document.getElementById("cancelModal"),
+    confirmModal: document.getElementById("confirmModal")
+  };
+
+  // ---------- Utils ----------
+  function pad2(n){ return n < 10 ? "0" + n : "" + n; }
+  function todayKey(){
+    var d = new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+  }
+  function niceDate(key){
+    var parts = key.split("-");
+    var d = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+    var todayStr = todayKey();
+    if (key === todayStr) return "Hoy · " + d.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'});
+    return d.toLocaleDateString('es-AR', {weekday:'short', day:'2-digit', month:'2-digit', year:'numeric'});
+  }
+
+  function formatMoney(n){
+    n = isNaN(n) ? 0 : n;
+    var fixed = n.toFixed(2);
+    var parts = fixed.split(".");
+    var intPart = parts[0];
+    var decPart = parts[1];
+    var withThousands = "";
+    var count = 0;
+    for (var i = intPart.length - 1; i >= 0; i--){
+      withThousands = intPart[i] + withThousands;
+      count++;
+      if (count % 3 === 0 && i !== 0){ withThousands = "." + withThousands; }
+    }
+    return "$ " + withThousands + "," + decPart;
+  }
+
+  function formatWeight(n){
+    n = isNaN(n) ? 0 : n;
+    return n.toFixed(3).replace(".", ",");
+  }
+
+  function rawToNumber(raw){
+    if (!raw) return 0;
+    var norm = raw.replace(",", ".");
+    var v = parseFloat(norm);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function loadJSON(key, fallback){
+    try {
+      var v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    } catch(e){ return fallback; }
+  }
+  function saveJSON(key, val){
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){}
+  }
+
+  // ---------- Base de datos portátil de ventas ----------
+  // Todo vive en UNA sola clave localStorage (persiste al cerrar la pestaña/app).
+  // Además se puede exportar/importar como archivo .json real: eso es lo que
+  // la hace "portátil" de verdad (sirve como backup y para pasarla a otro celular).
+  var DB_KEY = "verduleria_db_v1";
+
+  function migrateOldData(){
+    // Si ya existe la base nueva, no hace falta migrar.
+    if (localStorage.getItem(DB_KEY)) return;
+    var merged = [];
+    for (var i = 0; i < localStorage.length; i++){
+      var k = localStorage.key(i);
+      if (k && k.indexOf("verduleria_sales_") === 0){
+        var dateKey = k.replace("verduleria_sales_", "");
+        // normalizar fechas viejas sin padding (ej "2026-7-8" -> "2026-07-08")
+        var p = dateKey.split("-");
+        if (p.length === 3){
+          dateKey = p[0] + "-" + pad2(Number(p[1])) + "-" + pad2(Number(p[2]));
+        }
+        var arr = loadJSON(k, []);
+        arr.forEach(function(s){
+          s.date = dateKey;
+          merged.push(s);
+        });
+      }
+    }
+    if (merged.length){ saveJSON(DB_KEY, merged); }
+  }
+
+  function loadAllSales(){
+    return loadJSON(DB_KEY, []);
+  }
+  function saveAllSales(arr){
+    saveJSON(DB_KEY, arr);
+  }
+  function salesForDate(dateKey){
+    return loadAllSales().filter(function(s){ return s.date === dateKey; });
+  }
+  function availableDates(){
+    var all = loadAllSales();
+    var set = {};
+    all.forEach(function(s){ set[s.date] = true; });
+    var dates = Object.keys(set);
+    dates.sort(function(a,b){ return a < b ? 1 : -1; }); // más reciente primero
+    var today = todayKey();
+    if (dates.indexOf(today) === -1) dates.unshift(today);
+    return dates;
+  }
+
+  function downloadFile(filename, content, mime){
+    var blob = new Blob([content], {type: mime});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  function exportJSON(){
+    var all = loadAllSales();
+    var payload = {
+      app: "verduleria-balanza-digital",
+      exportado: new Date().toISOString(),
+      ventas: all,
+      productos: presets
+    };
+    downloadFile("verduleria_backup_" + todayKey() + ".json", JSON.stringify(payload, null, 2), "application/json");
+  }
+
+  function exportCSV(){
+    var all = loadAllSales().slice().sort(function(a,b){ return (a.date+a.time) < (b.date+b.time) ? 1 : -1; });
+    var rows = ["Fecha,Hora,Producto,Precio por kg,Peso (kg),Total"];
+    all.forEach(function(s){
+      rows.push([
+        s.date, s.time,
+        '"' + (s.name || "").replace(/"/g,'""') + '"',
+        s.price.toFixed(2).replace(".", ","),
+        s.weight.toFixed(3).replace(".", ","),
+        s.total.toFixed(2).replace(".", ",")
+      ].join(","));
+    });
+    downloadFile("verduleria_ventas_" + todayKey() + ".csv", rows.join("\n"), "text/csv;charset=utf-8;");
+  }
+
+  function importFromFile(file){
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      try {
+        var data = JSON.parse(ev.target.result);
+        var incoming = data.ventas || [];
+        var current = loadAllSales();
+        var existingIds = {};
+        current.forEach(function(s){ existingIds[s.id] = true; });
+        var added = 0;
+        incoming.forEach(function(s){
+          if (!existingIds[s.id]){
+            current.push(s);
+            added++;
+          }
+        });
+        saveAllSales(current);
+        if (data.productos && Array.isArray(data.productos)){
+          presets = data.productos;
+          saveJSON("verduleria_presets", presets);
+          renderPresets();
+        }
+        alert("Copia restaurada: " + added + " venta(s) nueva(s) agregada(s).");
+        populateDateSelect();
+        renderSaleList();
+        renderDayTotal();
+      } catch(e){
+        alert("No se pudo leer ese archivo. Asegurate de elegir un .json exportado desde esta app.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- Presets ----------
+  var presets = loadJSON("verduleria_presets", null) || DEFAULT_PRESETS;
+
+  var EMOJI_MAP = [
+    [/tomate/i, "🍅"], [/papa|patata/i, "🥔"], [/cebolla/i, "🧅"],
+    [/zanahoria/i, "🥕"], [/manzana/i, "🍎"], [/banana|platano/i, "🍌"],
+    [/naranja/i, "🍊"], [/zapallo|calabaza/i, "🎃"], [/limon/i, "🍋"],
+    [/pera/i, "🍐"], [/uva/i, "🍇"], [/lechuga|verdura|acelga|espinaca/i, "🥬"],
+    [/ajo/i, "🧄"], [/pimiento|morron|aji/i, "🫑"], [/choclo|maiz/i, "🌽"],
+    [/sandia/i, "🍉"], [/melon/i, "🍈"], [/durazno/i, "🍑"],
+    [/frutilla|fresa/i, "🍓"], [/palta|aguacate/i, "🥑"], [/berenjena/i, "🍆"],
+    [/pepino/i, "🥒"], [/coco/i, "🥥"], [/kiwi/i, "🥝"], [/hongo|champi/i, "🍄"]
+  ];
+  function emojiFor(name){
+    for (var i = 0; i < EMOJI_MAP.length; i++){
+      if (EMOJI_MAP[i][0].test(name)) return EMOJI_MAP[i][1];
+    }
+    return "🥬";
+  }
+
+  function renderPresets(){
+    els.presets.innerHTML = "";
+    els.presetsCount.textContent = presets.length;
+    presets.forEach(function(p){
+      var chip = document.createElement("div");
+      chip.className = "chip" + (state.productName === p.name ? " selected" : "");
+      chip.innerHTML =
+        '<span class="emoji">' + emojiFor(p.name) + '</span>' +
+        '<span class="pname">' + p.name + '</span>' +
+        '<small>' + formatMoney(p.price) + ' /kg</small>';
+      chip.addEventListener("click", function(){
+        state.priceRaw = String(p.price).replace(".", ",");
+        state.productName = p.name;
+        setActiveField("weight");
+        render();
+        renderPresets();
+      });
+      chip.addEventListener("contextmenu", function(ev){
+        ev.preventDefault();
+        if (confirm('¿Eliminar "' + p.name + '" de los accesos rápidos?')){
+          presets = presets.filter(function(x){ return x.name !== p.name; });
+          saveJSON("verduleria_presets", presets);
+          renderPresets();
+        }
+      });
+      els.presets.appendChild(chip);
+    });
+    var addChip = document.createElement("div");
+    addChip.className = "chip add";
+    addChip.innerHTML = '<span class="emoji">➕</span><span class="pname">Agregar</span><small>producto</small>';
+    addChip.addEventListener("click", openModal);
+    els.presets.appendChild(addChip);
+  }
+
+  // ---------- Field logic ----------
+  function setActiveField(field){
+    state.activeField = field;
+    els.fieldPrice.classList.toggle("active", field === "price");
+    els.fieldWeight.classList.toggle("active", field === "weight");
+  }
+
+  els.fieldPrice.addEventListener("click", function(){ setActiveField("price"); });
+  els.fieldWeight.addEventListener("click", function(){ setActiveField("weight"); });
+
+  function currentRaw(){
+    return state.activeField === "price" ? state.priceRaw : state.weightRaw;
+  }
+  function setCurrentRaw(v){
+    if (state.activeField === "price") state.priceRaw = v; else state.weightRaw = v;
+  }
+
+  els.keypad.addEventListener("click", function(ev){
+    var btn = ev.target.closest(".key");
+    if (!btn) return;
+    var key = btn.getAttribute("data-key");
+    var raw = currentRaw();
+
+    if (key === "clear"){
+      raw = "";
+    } else if (key === "back"){
+      raw = raw.slice(0, -1);
+    } else if (key === ","){
+      if (raw.indexOf(",") === -1){
+        raw = (raw === "" ? "0" : raw) + ",";
+      }
+    } else {
+      // digit
+      if (raw === "0") raw = key;
+      else {
+        var decIdx = raw.indexOf(",");
+        if (decIdx !== -1 && raw.length - decIdx > 2) {
+          // limit to 2 decimals
+        } else {
+          raw = raw + key;
+        }
+      }
+    }
+    setCurrentRaw(raw);
+    render();
+  });
+
+  // ---------- Save / New sale ----------
+  function getTotal(){
+    return rawToNumber(state.priceRaw) * rawToNumber(state.weightRaw);
+  }
+
+  function render(){
+    var priceNum = rawToNumber(state.priceRaw);
+    var weightNum = rawToNumber(state.weightRaw);
+    var total = priceNum * weightNum;
+
+    els.priceDisplay.textContent = state.priceRaw === "" ? "$ 0,00" : "$ " + state.priceRaw;
+    els.weightDisplay.textContent = state.weightRaw === "" ? "0,000" : state.weightRaw;
+
+    var prevTotal = els.totalDisplay.textContent;
+    var newTotal = formatMoney(total);
+    els.totalDisplay.textContent = newTotal;
+    if (prevTotal !== newTotal && total > 0){
+      els.totalDisplay.classList.remove("pulse");
+      void els.totalDisplay.offsetWidth;
+      els.totalDisplay.classList.add("pulse");
+    }
+
+    els.productTag.innerHTML = state.productName
+      ? "Producto: <b>" + state.productName + "</b>"
+      : "Tocá un producto o ingresá el precio manualmente";
+
+    els.addToCartBtn.disabled = !(priceNum > 0 && weightNum > 0);
+  }
+
+  els.newSaleBtn.addEventListener("click", function(){
+    state.priceRaw = "";
+    state.weightRaw = "";
+    state.productName = null;
+    setActiveField("price");
+    render();
+    renderPresets();
+  });
+
+  // ---------- Carrito de la venta actual ----------
+  function renderCart(){
+    var cart = state.cart;
+    var total = cart.reduce(function(acc, it){ return acc + it.total; }, 0);
+
+    els.cartCount.textContent = cart.length + (cart.length === 1 ? " producto" : " productos");
+    els.cartTotalDisplay.textContent = formatMoney(total);
+    els.checkoutBtn.disabled = cart.length === 0;
+
+    els.cartList.innerHTML = "";
+    if (cart.length === 0){
+      els.cartList.innerHTML = '<div class="empty-hint small">Agregá productos con el botón de abajo para sumarlos a esta venta.</div>';
+      return;
+    }
+    cart.forEach(function(it){
+      var row = document.createElement("div");
+      row.className = "cart-row";
+      row.innerHTML =
+        '<div class="info"><b>' + it.name + '</b><span>' + formatWeight(it.weight) + ' kg × ' + formatMoney(it.price) + '</span></div>' +
+        '<div class="amount">' + formatMoney(it.total) + '</div>' +
+        '<button class="del" data-cid="' + it.cid + '">✕</button>';
+      els.cartList.appendChild(row);
+    });
+  }
+
+  els.cartList.addEventListener("click", function(ev){
+    var btn = ev.target.closest(".del");
+    if (!btn) return;
+    var cid = Number(btn.getAttribute("data-cid"));
+    state.cart = state.cart.filter(function(it){ return it.cid !== cid; });
+    renderCart();
+  });
+
+  els.clearCartBtn.addEventListener("click", function(){
+    if (state.cart.length === 0) return;
+    if (confirm("¿Vaciar los productos agregados a esta venta?")){
+      state.cart = [];
+      renderCart();
+    }
+  });
+
+  els.addToCartBtn.addEventListener("click", function(){
+    var priceNum = rawToNumber(state.priceRaw);
+    var weightNum = rawToNumber(state.weightRaw);
+    var total = priceNum * weightNum;
+    if (!(priceNum > 0 && weightNum > 0)) return;
+
+    cartIdCounter++;
+    state.cart.push({
+      cid: cartIdCounter,
+      name: state.productName || "Producto sin nombre",
+      price: priceNum,
+      weight: weightNum,
+      total: total
+    });
+
+    // reset entry fields for the next product
+    state.priceRaw = "";
+    state.weightRaw = "";
+    state.productName = null;
+    setActiveField("price");
+    render();
+    renderPresets();
+    renderCart();
+  });
+
+  els.checkoutBtn.addEventListener("click", function(){
+    if (state.cart.length === 0) return;
+    var ticketId = Date.now();
+    var timeStr = new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+    var sales = loadAllSales();
+    state.cart.forEach(function(it, idx){
+      sales.unshift({
+        id: ticketId + idx,
+        ticketId: ticketId,
+        name: it.name,
+        price: it.price,
+        weight: it.weight,
+        total: it.total,
+        date: todayKey(),
+        time: timeStr
+      });
+    });
+    saveAllSales(sales);
+
+    state.cart = [];
+    renderCart();
+    renderDayTotal();
+  });
+
+  // ---------- History drawer ----------
+  var selectedDate = todayKey();
+
+  function renderDayTotal(){
+    // El total del encabezado siempre es el de HOY, sea cual sea la fecha que se esté mirando en el historial.
+    var todaySales = salesForDate(todayKey());
+    var todayTotal = todaySales.reduce(function(acc, s){ return acc + s.total; }, 0);
+    els.dayTotalDisplay.textContent = formatMoney(todayTotal);
+    return todaySales;
+  }
+
+  function populateDateSelect(){
+    var dates = availableDates();
+    if (dates.indexOf(selectedDate) === -1) selectedDate = todayKey();
+    els.dateSelect.innerHTML = "";
+    dates.forEach(function(d){
+      var opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = niceDate(d);
+      if (d === selectedDate) opt.selected = true;
+      els.dateSelect.appendChild(opt);
+    });
+  }
+
+  function renderSaleList(){
+    renderDayTotal();
+    var sales = salesForDate(selectedDate).slice().sort(function(a,b){ return b.id - a.id; });
+    var total = sales.reduce(function(acc, s){ return acc + s.total; }, 0);
+    els.drawerSub.textContent = sales.length + (sales.length === 1 ? " venta · " : " ventas · ") + formatMoney(total) + " acumulado";
+
+    els.saleList.innerHTML = "";
+    if (sales.length === 0){
+      els.saleList.innerHTML = '<div class="empty-hint">No hay ventas registradas ese día.</div>';
+      return;
+    }
+    sales.forEach(function(s){
+      var item = document.createElement("div");
+      item.className = "sale-item";
+      item.innerHTML =
+        '<div class="info"><b>' + s.name + '</b><span>' + formatWeight(s.weight) + ' kg × ' + formatMoney(s.price) + ' · ' + s.time + '</span></div>' +
+        '<div class="amount">' + formatMoney(s.total) + '</div>' +
+        '<button class="del" data-id="' + s.id + '">✕</button>';
+      els.saleList.appendChild(item);
+    });
+  }
+
+  els.dateSelect.addEventListener("change", function(){
+    selectedDate = els.dateSelect.value;
+    renderSaleList();
+  });
+
+  els.saleList.addEventListener("click", function(ev){
+    var btn = ev.target.closest(".del");
+    if (!btn) return;
+    var id = Number(btn.getAttribute("data-id"));
+    var sales = loadAllSales().filter(function(s){ return s.id !== id; });
+    saveAllSales(sales);
+    populateDateSelect();
+    renderSaleList();
+  });
+
+  els.clearDayBtn.addEventListener("click", function(){
+    if (confirm("¿Vaciar las ventas de " + niceDate(selectedDate) + "? Esta acción no se puede deshacer.")){
+      var sales = loadAllSales().filter(function(s){ return s.date !== selectedDate; });
+      saveAllSales(sales);
+      populateDateSelect();
+      renderSaleList();
+    }
+  });
+
+  els.exportJsonBtn.addEventListener("click", exportJSON);
+  els.exportCsvBtn.addEventListener("click", exportCSV);
+  els.importBtn.addEventListener("click", function(){ els.importFile.click(); });
+  els.importFile.addEventListener("change", function(){
+    if (els.importFile.files && els.importFile.files[0]){
+      importFromFile(els.importFile.files[0]);
+      els.importFile.value = "";
+    }
+  });
+
+  function openDrawer(){
+    selectedDate = todayKey();
+    populateDateSelect();
+    renderSaleList();
+    els.overlay.classList.add("show");
+    els.drawer.classList.add("show");
+  }
+  function closeDrawer(){
+    els.overlay.classList.remove("show");
+    els.drawer.classList.remove("show");
+  }
+  els.openHistory.addEventListener("click", openDrawer);
+  els.overlay.addEventListener("click", function(){ closeDrawer(); closeModal(); });
+
+  // ---------- Add product modal ----------
+  function openModal(){
+    els.newProdName.value = "";
+    els.newProdPrice.value = "";
+    els.modal.classList.add("show");
+    els.overlay.classList.add("show");
+    setTimeout(function(){ els.newProdName.focus(); }, 150);
+  }
+  function closeModal(){
+    els.modal.classList.remove("show");
+    if (!els.drawer.classList.contains("show")) els.overlay.classList.remove("show");
+  }
+  els.cancelModal.addEventListener("click", closeModal);
+  els.confirmModal.addEventListener("click", function(){
+    var name = els.newProdName.value.trim();
+    var price = parseFloat(els.newProdPrice.value);
+    if (!name || isNaN(price) || price <= 0){
+      alert("Completá un nombre y un precio válido.");
+      return;
+    }
+    presets.push({name: name, price: price});
+    saveJSON("verduleria_presets", presets);
+    renderPresets();
+    closeModal();
+  });
+
+  // ---------- Presets: mostrar / ocultar ----------
+  function applyPresetsCollapsed(collapsed){
+    els.presets.classList.toggle("hidden", collapsed);
+    els.togglePresetsBtn.classList.toggle("collapsed", collapsed);
+    els.togglePresetsBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    saveJSON("verduleria_presets_collapsed", collapsed);
+  }
+  els.togglePresetsBtn.addEventListener("click", function(){
+    var isCollapsed = els.presets.classList.contains("hidden");
+    applyPresetsCollapsed(!isCollapsed);
+  });
+
+  // ---------- Init ----------
+  migrateOldData();
+  renderPresets();
+  render();
+  renderCart();
+  renderDayTotal();
+  applyPresetsCollapsed(!!loadJSON("verduleria_presets_collapsed", false));
+
+})();
+</script>
+</body>
+</html>
