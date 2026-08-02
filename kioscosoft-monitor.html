@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kioscoSoft — Monitoreo remoto</title>
+<style>
+  :root{
+    --bg:#0b0e1f; --panel:#131736; --panel2:#1a1f45; --line:#2a2f5c;
+    --ink:#f2f3fb; --ink-muted:#9aa0c9; --blue:#4c9dfd; --violet:#8a5cf6;
+    --green:#34d399; --red:#ff6b6b; --amber:#ffb648;
+    --mono:'SFMono-Regular','IBM Plex Mono',monospace;
+    --body:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--body);
+    min-height:100vh; padding:20px 16px 60px;
+  }
+  .wrap{ max-width:480px; margin:0 auto; }
+  .brand{ display:flex; align-items:center; gap:10px; margin-bottom:22px; }
+  .brand .dot{ width:10px; height:10px; border-radius:50%; background:var(--green); }
+  .brand h1{ font-size:17px; font-weight:700; }
+  .brand h1 span{ background:linear-gradient(100deg,var(--blue),var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; }
+  .card h2{ font-size:13px; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; font-weight:600; }
+
+  input{
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--ink);
+    padding:12px 14px; border-radius:10px; font-size:15px; margin-bottom:10px;
+  }
+  input::placeholder{ color:var(--ink-muted); }
+  label{ font-size:12px; color:var(--ink-muted); display:block; margin:0 0 4px 2px; }
+  button{
+    width:100%; padding:13px; border-radius:10px; border:none; font-size:15px; font-weight:600;
+    cursor:pointer; font-family:inherit;
+  }
+  .btn-primary{ background:linear-gradient(100deg,var(--blue),var(--violet)); color:#fff; }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink-muted); margin-top:8px; }
+  .msg{ font-size:13px; margin-top:10px; line-height:1.5; }
+  .msg.err{ color:var(--red); }
+  .msg.ok{ color:var(--green); }
+  .msg.info{ color:var(--ink-muted); }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat{ background:var(--panel2); border-radius:10px; padding:14px; }
+  .stat .lbl{ font-size:11.5px; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.04em; }
+  .stat .val{ font-family:var(--mono); font-size:20px; font-weight:600; margin-top:4px; }
+  .stat.total .val{ color:var(--green); }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th{ text-align:left; color:var(--ink-muted); font-weight:600; font-size:11px; text-transform:uppercase;
+      padding:6px 4px; border-bottom:1px solid var(--line); }
+  td{ padding:8px 4px; border-bottom:1px solid var(--line); font-family:var(--mono); }
+  tr:last-child td{ border-bottom:none; }
+
+  .stock-item{ display:flex; justify-content:space-between; align-items:center;
+    background:#2a1f14; border:1px solid #4a3520; border-radius:8px; padding:10px 12px; margin-bottom:8px; }
+  .stock-item .n{ font-size:13.5px; }
+  .stock-item .s{ font-family:var(--mono); font-size:12.5px; color:var(--amber); font-weight:600; }
+
+  .empty{ color:var(--ink-muted); font-size:13.5px; text-align:center; padding:20px 0; }
+  .updated{ text-align:center; font-size:11.5px; color:var(--ink-muted); margin-top:6px; font-family:var(--mono); }
+  .top-actions{ display:flex; justify-content:flex-end; margin-bottom:10px; }
+  .top-actions button{ width:auto; padding:8px 14px; font-size:12.5px; }
+
+  #pantalla-login, #pantalla-datos{ display:none; }
+  .spinner{ width:16px; height:16px; border:2px solid var(--line); border-top-color:var(--blue);
+    border-radius:50%; display:inline-block; animation:spin .7s linear infinite; vertical-align:-3px; margin-right:6px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="dot"></span><h1>kiosco<span>Soft</span> — Monitoreo remoto</h1></div>
+
+  <div id="pantalla-login">
+    <div class="card">
+      <h2>Conectar</h2>
+      <label>ID del proyecto de Firebase</label>
+      <input id="in-project" placeholder="mi-kiosco-12345" autocapitalize="off" autocorrect="off">
+      <label>Clave de API Web</label>
+      <input id="in-apikey" placeholder="AIzaSy..." autocapitalize="off" autocorrect="off">
+      <label>Email de la cuenta de monitoreo</label>
+      <input id="in-email" type="email" placeholder="mikiosco@ejemplo.com" autocapitalize="off">
+      <label>Contraseña</label>
+      <input id="in-password" type="password" placeholder="••••••••">
+      <button class="btn-primary" onclick="conectar()">Ver mi kiosco</button>
+      <div id="login-msg" class="msg info"></div>
+    </div>
+    <p style="font-size:12px; color:var(--ink-muted); text-align:center; line-height:1.6;">
+      Usá los mismos datos que cargaste en kioscoSoft, en "Monitoreo remoto".<br>
+      Se guardan solo en este celular, para no tener que escribirlos cada vez.
+    </p>
+  </div>
+
+  <div id="pantalla-datos">
+    <div class="top-actions"><button class="btn-ghost" onclick="cerrarSesion()">Cerrar sesión</button></div>
+
+    <div class="card">
+      <h2>Hoy</h2>
+      <div class="stat-grid">
+        <div class="stat total"><div class="lbl">Total vendido</div><div class="val" id="d-total">—</div></div>
+        <div class="stat"><div class="lbl">Ventas</div><div class="val" id="d-ventas">—</div></div>
+        <div class="stat"><div class="lbl">Efectivo</div><div class="val" id="d-efectivo">—</div></div>
+        <div class="stat"><div class="lbl">Débito</div><div class="val" id="d-debito">—</div></div>
+        <div class="stat"><div class="lbl">QR</div><div class="val" id="d-qr">—</div></div>
+        <div class="stat"><div class="lbl">Transferencia</div><div class="val" id="d-transferencia">—</div></div>
+      </div>
+      <div class="updated" id="d-actualizado">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Últimas ventas</h2>
+      <div id="d-ultimas"></div>
+    </div>
+
+    <div class="card">
+      <h2>Stock bajo</h2>
+      <div id="d-stock"></div>
+    </div>
+
+    <div id="datos-msg" class="msg info" style="text-align:center;"></div>
+  </div>
+</div>
+
+<script>
+const AUTH_BASE = "https://identitytoolkit.googleapis.com/v1";
+const TOKEN_BASE = "https://securetoken.googleapis.com/v1";
+const FIRESTORE_BASE = "https://firestore.googleapis.com/v1";
+let sesion = null; // {projectId, apiKey, idToken, refreshToken, uid, expiraEn}
+let intervaloRefresh = null;
+
+function guardarSesionLocal(){
+  localStorage.setItem('kiosco_monitor', JSON.stringify({
+    projectId: sesion.projectId, apiKey: sesion.apiKey,
+    email: sesion.email, refreshToken: sesion.refreshToken,
+  }));
+}
+
+function cargarSesionLocal(){
+  try{
+    const raw = localStorage.getItem('kiosco_monitor');
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function cerrarSesion(){
+  localStorage.removeItem('kiosco_monitor');
+  sesion = null;
+  if(intervaloRefresh) clearInterval(intervaloRefresh);
+  document.getElementById('pantalla-datos').style.display = 'none';
+  document.getElementById('pantalla-login').style.display = 'block';
+}
+
+async function conectar(){
+  const projectId = document.getElementById('in-project').value.trim();
+  const apiKey = document.getElementById('in-apikey').value.trim();
+  const email = document.getElementById('in-email').value.trim();
+  const password = document.getElementById('in-password').value;
+  const msg = document.getElementById('login-msg');
+
+  if(!projectId || !apiKey || !email || !password){
+    msg.textContent = 'Completá los cuatro campos.'; msg.className = 'msg err'; return;
+  }
+  msg.innerHTML = '<span class="spinner"></span> Conectando...'; msg.className = 'msg info';
+
+  try{
+    const resp = await fetch(`${AUTH_BASE}/accounts:signInWithPassword?key=${apiKey}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password, returnSecureToken:true }),
+    });
+    const datos = await resp.json();
+    if(!resp.ok){ throw new Error(traducirError(datos)); }
+
+    sesion = {
+      projectId, apiKey, email,
+      idToken: datos.idToken, refreshToken: datos.refreshToken, uid: datos.localId,
+    };
+    guardarSesionLocal();
+    document.getElementById('pantalla-login').style.display = 'none';
+    document.getElementById('pantalla-datos').style.display = 'block';
+    await cargarResumen();
+    if(intervaloRefresh) clearInterval(intervaloRefresh);
+    intervaloRefresh = setInterval(cargarResumen, 60000);
+  }catch(ex){
+    msg.textContent = '✕ ' + ex.message; msg.className = 'msg err';
+  }
+}
+
+function traducirError(datos){
+  const m = (datos.error && datos.error.message) || 'Error desconocido';
+  if(m.includes('EMAIL_NOT_FOUND')) return 'No existe una cuenta con ese email.';
+  if(m.includes('INVALID_PASSWORD') || m.includes('INVALID_LOGIN_CREDENTIALS')) return 'Email o contraseña incorrectos.';
+  if(m.includes('API_KEY_INVALID')) return 'La Clave de API Web no es válida.';
+  if(m.includes('TOO_MANY_ATTEMPTS')) return 'Demasiados intentos. Esperá unos minutos.';
+  return m;
+}
+
+async function refrescarToken(){
+  const resp = await fetch(`${TOKEN_BASE}/token?key=${sesion.apiKey}`, {
+    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(sesion.refreshToken)}`,
+  });
+  const datos = await resp.json();
+  if(!resp.ok) throw new Error(traducirError(datos));
+  sesion.idToken = datos.id_token;
+  sesion.refreshToken = datos.refresh_token;
+  guardarSesionLocal();
+}
+
+// Convierte el formato tipado de Firestore ({stringValue:...}, {integerValue:...}, etc.) a JS plano.
+function desdeFirestore(v){
+  if(v == null) return null;
+  if('stringValue' in v) return v.stringValue;
+  if('integerValue' in v) return parseInt(v.integerValue, 10);
+  if('doubleValue' in v) return v.doubleValue;
+  if('booleanValue' in v) return v.booleanValue;
+  if('arrayValue' in v) return (v.arrayValue.values || []).map(desdeFirestore);
+  if('mapValue' in v){
+    const out = {};
+    const campos = v.mapValue.fields || {};
+    for(const k in campos) out[k] = desdeFirestore(campos[k]);
+    return out;
+  }
+  return null;
+}
+
+function money(n){
+  n = Number(n) || 0;
+  return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+async function cargarResumen(intentoRefresh){
+  const msg = document.getElementById('datos-msg');
+  try{
+    const url = `${FIRESTORE_BASE}/projects/${sesion.projectId}/databases/(default)/documents/kioscos/${sesion.uid}/estado/resumen`;
+    let resp = await fetch(url, { headers:{ 'Authorization': `Bearer ${sesion.idToken}` } });
+
+    if(resp.status === 401 && !intentoRefresh){
+      await refrescarToken();
+      return cargarResumen(true);
+    }
+    if(resp.status === 404){
+      msg.textContent = 'Todavía no llegó ningún dato. La app sube el primer resumen a los pocos minutos de abrirla.';
+      msg.className = 'msg info';
+      return;
+    }
+    const datos = await resp.json();
+    if(!resp.ok) throw new Error((datos.error && datos.error.message) || 'Error al leer los datos.');
+
+    const campos = datos.fields || {};
+    const r = {};
+    for(const k in campos) r[k] = desdeFirestore(campos[k]);
+
+    document.getElementById('d-total').textContent = money(r.total_hoy);
+    document.getElementById('d-ventas').textContent = r.ventas_hoy ?? 0;
+    document.getElementById('d-efectivo').textContent = money(r.efectivo_hoy);
+    document.getElementById('d-debito').textContent = money(r.debito_hoy);
+    document.getElementById('d-qr').textContent = money(r.qr_hoy);
+    document.getElementById('d-transferencia').textContent = money(r.transferencia_hoy);
+    document.getElementById('d-actualizado').textContent = 'Actualizado: ' + (r.actualizado || '—');
+
+    const cont = document.getElementById('d-ultimas');
+    const ventas = r.ultimas_ventas || [];
+    if(ventas.length === 0){
+      cont.innerHTML = '<div class="empty">Todavía no hay ventas hoy.</div>';
+    } else {
+      let html = '<table><tr><th>Hora</th><th>Total</th><th>Usuario</th></tr>';
+      ventas.forEach(v => {
+        html += `<tr><td>${v.hora||''}</td><td>${money(v.total)}</td><td>${v.usuario||''}</td></tr>`;
+      });
+      html += '</table>';
+      cont.innerHTML = html;
+    }
+
+    const contStock = document.getElementById('d-stock');
+    const bajos = r.stock_bajo || [];
+    if(bajos.length === 0){
+      contStock.innerHTML = '<div class="empty">Ningún producto con poco stock. 👍</div>';
+    } else {
+      contStock.innerHTML = bajos.map(p => {
+        const texto = p.por_peso ? `${Number(p.stock).toFixed(0)} g` : `${p.stock} unid.`;
+        return `<div class="stock-item"><span class="n">⚠ ${p.nombre}</span><span class="s">${texto}</span></div>`;
+      }).join('');
+    }
+
+    msg.textContent = '';
+  }catch(ex){
+    msg.textContent = '✕ ' + ex.message; msg.className = 'msg err';
+  }
+}
+
+// Al abrir la página, si ya había una sesión guardada en este celular, entra directo.
+(async function inicio(){
+  const guardada = cargarSesionLocal();
+  if(guardada && guardada.refreshToken){
+    sesion = { projectId: guardada.projectId, apiKey: guardada.apiKey, email: guardada.email,
+               refreshToken: guardada.refreshToken, idToken: null, uid: null };
+    try{
+      await refrescarToken();
+      sesion.uid = JSON.parse(atob(sesion.idToken.split('.')[1])).user_id;
+      document.getElementById('pantalla-login').style.display = 'none';
+      document.getElementById('pantalla-datos').style.display = 'block';
+      await cargarResumen();
+      intervaloRefresh = setInterval(cargarResumen, 60000);
+      return;
+    }catch(ex){ /* si falla, mostramos el login normal */ }
+  }
+  document.getElementById('pantalla-login').style.display = 'block';
+})();
+</script>
+</body>
+</html>
